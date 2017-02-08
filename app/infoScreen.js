@@ -4,31 +4,45 @@ import {
   Text,
   View,
   Button,
-  TextInput
+  TextInput,
+  AsyncStorage
 } from 'react-native';
 import { Actions } from 'react-native-router-flux';
 import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
 
-var radio_props = [
-  {label: 'male', value: 0 },
-  {label: 'female', value: 1 }
+let radio_props = [
+  {label: 'male', value: "false" },
+  {label: 'female', value: "true" }
 ];
 
-class buttonScreen extends Component {
+export default class ButtonScreen extends Component {
   constructor(props) {
     super(props);
-    this.state = {weight: props.weight,
-                  sex: props.sex};
+    this.state = {weight: "not set",
+                  sex: "not set"};
+  }
+
+  componentWillMount() {
+    AsyncStorage.multiGet(["weight", "sex"]).then((values) => {
+      let weight = values[0][1];
+      let sex = values[1][1];
+
+      this.setState({ weight: weight, sex: sex })
+    });
   }
 
   setWeight(value) {
-    this.setState({weight: value})
-    this.props.setter(value, this.state.sex)
+    this.setState({weight: value}, this.update())
+    AsyncStorage.setItem("weight", value);
   }
 
   setSex(value) {
-    this.setState({sex: value})
-    this.props.setter(this.state.weight, value)
+    this.setState({sex: value}, this.update())
+    AsyncStorage.setItem("sex", value);
+  }
+
+  update() {
+    this.props.update(this.state.weight, this.state.sex);
   }
 
   render () {
@@ -38,11 +52,11 @@ class buttonScreen extends Component {
           <RadioForm
             style={{height: 100, width: 100}}
             radio_props={radio_props}
-            initial={0}
             formHorizontal={true}
             labelHorizontal={false}
             buttonColor={'#2196f3'}
             animation={true}
+            initial={"false"}
             onPress={(value) => {this.setSex(value)}}
           />
         </View>
@@ -90,5 +104,3 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 });
-
-export default buttonScreen;

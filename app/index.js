@@ -25,13 +25,12 @@ const App = () => {
           <Scene key="etusivu" title="etusivu" icon={TabIcon} initial>
             <Scene key="button"
               component={buttonScreen}
-              title="asdasd"
+              title="Ottori"
               initial
             />
 
             <Scene key="infoSivu"
               component={infoScreen}
-              title="informatioon"
             />
           </Scene>
 
@@ -39,7 +38,6 @@ const App = () => {
             <Scene
               key="Stats"
               component={statsScreen}
-              title="Stats"
             />
           </Scene>
         </Scene>

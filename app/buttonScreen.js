@@ -4,26 +4,33 @@ import {
   Text,
   View,
   Button,
-  AppState
+  AppState,
+  AsyncStorage
 } from 'react-native';
 import { Actions } from 'react-native-router-flux';
-import moment from 'moment';
-//import MomentTZ from 'moment-timezone';
-//import moment from 'moment-duration-format';
+import Timer from './Timer';
+import Moment from 'moment';
 
-class buttonScreen extends Component {
+class ButtonScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {count: 0,
-                  hours: 0,
-                  proms: 0,
-                  interval: null,
+                  proms: null,
                   weight: "Not set yet",
                   sex: "Not set yet",
                   isSet: false,
-                  proms: "Need information",
-                  startTime: null,
-                  startTimeForInfo: null};
+                  proms: "0"};
+  }
+
+  componentWillMount() {
+    AsyncStorage.multiGet(["weight", "sex"]).then((values) => {
+      let weight = values[0][1];
+      let sex = values[1][1];
+
+      this.setState({ weight: weight, sex: sex })
+
+      if (weight !== null && sex !== null) this.setState({ isSet: true});
+    });
   }
 
   componentDidMount() {
@@ -39,74 +46,52 @@ class buttonScreen extends Component {
   }
 
   takeADrink() {
+    if (this.state.count == 0) this.setStartingTime();
     this.setState({ count: this.state.count + 1 })
     this.countProms();
   }
 
   getSexMultiplier() {
-    return (this.state.sex == 1) ? 0.49 : 0.58;
+    return (this.state.sex === "true") ? 0.49 : 0.58;
   }
 
-  setStartingPoint() {
-    this.setState({ startTime: new Date().getTime(), startTimeForInfo: moment().format("d hh:mm a") });
-  }
-
+  /*
   countProms() {
-    if (this.state.startTime == null) {
-      this.setStartingPoint();
-    }
-
     this.updateHoursSinceStart();
 
-    var MR = 0.016;
-    var water = 0.806;
-    var BW = this.getSexMultiplier();
-    var SD = parseInt(this.state.count);
-    var WT = parseInt(this.state.weight);
-    var DP = parseInt(this.state.hours);
+    let MR = 0.016;
+    let water = 0.806;
+    let BW = this.getSexMultiplier();
+    let SD = parseInt(this.state.count);
+    let WT = parseInt(this.state.weight);
+    let DP = Math.round(this.state.hours * 100) / 100;
 
-    var amount = (((water * SD * 1.2) / (BW * WT)) - (MR * DP)) * 10;
-    var roundedAmount = (amount > 0) ? Math.round(amount * 100) / 100 : 0;
+    let amount = (((water * SD * 1.2) / (BW * WT)) - (MR * DP)) * 10;
+    let roundedAmount = (amount > 0) ? Math.round(amount * 100) / 100 : 0;
 
     if (this.state.isSet == true) {
-      this.setState({proms: roundedAmount})
+      this.setState({proms: amount})
     }
+  }
+  */
+
+  updateHoursSinceStart() {
+    let d = new Date();
+    let difference = Math.abs(this.state.startTime - d.getTime()) / 3600000;
+    difference = Math.round(difference * 100) / 100;
+    this.setState({ hours: difference });
   }
 
   resetDrinksAndHours() {
-    this.setState({ hours: 0, count: 0, startTime: null });
+    this.setState({ hours: 0, count: 0, startTime: null, proms: null });
   }
 
-  setWeightAndSex(w, s) {
+  updateInfos(w, s) {
     this.setState({
       sex: s,
       weight: w,
       isSet: true
     });
-  }
-
-  // one hour is 3600000ms
-  updateHoursSinceStart() {
-    var d = new Date();
-    if (this.state.startTime == null) {
-      this.setState({ hours: 0 })
-    } else {
-      var difference = Math.abs(this.state.startTime - d.getTime()) / 3600000;
-      difference = Math.round(difference * 100) / 100;
-      this.setState({ hours: difference })
-    }
-  }
-
-  getHumanifiedTime() {
-    return (this.state.startTimeForInfo == null) ? "not yet?" : moment(this.state.startTimeForInfo, "d hh:mm a").fromNow();
-  }
-
-  showAlcohol() {
-    return (this.state.isSet) ? "About " + this.state.proms + "‰ of alcohol on your blood" : "Set info";
-  }
-
-  showTime() {
-    return (this.state.count == 0) ? "No drinks yet" : "First drink logged " + this.getHumanifiedTime();
   }
 
   render () {
@@ -116,14 +101,14 @@ class buttonScreen extends Component {
           "Log a drink whenever you consume a standard portition of alcohol, eg. 4cl of 40% or a beer"
         </Text>
 
-        <Button onPress={() => Actions.infoSivu({ weight: this.state.weight, sex: this.state.sex, setter: this.setWeightAndSex.bind(this) })}
+        <Button onPress={() => Actions.infoSivu({ weight: this.state.weight, sex: this.state.sex, update: this.updateInfos.bind(this) })}
           title = { this.state.isSet ? "Change infos" : "Set infos" }
           color= { this.state.isSet ? "green" : "red" }
           accessibilityLabel="Learn more about this purple button"
         />
 
         <Text style={styles.welcome}>
-          { this.showTime() }
+          { this.getHumanifiedTime() }
         </Text>
 
         <Text style={styles.welcome}>
@@ -133,6 +118,8 @@ class buttonScreen extends Component {
         <Text style={styles.welcome}>
           { this.showAlcohol() }
         </Text>
+
+        <Timer />
 
         <Button onPress={() => this.takeADrink()}
           title="Take a drink"
@@ -165,4 +152,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default buttonScreen;
+export default ButtonScreen;
