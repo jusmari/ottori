@@ -11,11 +11,11 @@ import { Actions } from 'react-native-router-flux';
 import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
 
 let radio_props = [
-  {label: 'male', value: "false" },
-  {label: 'female', value: "true" }
+  {label: 'male', value: 0 },
+  {label: 'female', value: 1 }
 ];
 
-export default class ButtonScreen extends Component {
+class buttonScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {weight: "not set",
@@ -27,18 +27,18 @@ export default class ButtonScreen extends Component {
       let weight = values[0][1];
       let sex = values[1][1];
 
-      this.setState({ weight: weight, sex: sex })
+      this.setState({ weight: weight, sex: sex });
     });
   }
 
   setWeight(value) {
-    this.setState({weight: value}, this.update())
+    this.setState({weight: value}, this.update());
     AsyncStorage.setItem("weight", value);
   }
 
   setSex(value) {
-    this.setState({sex: value}, this.update())
-    AsyncStorage.setItem("sex", value);
+    this.setState({sex: value}, this.update());
+    AsyncStorage.setItem("sex", JSON.stringify(value));
   }
 
   update() {
@@ -47,37 +47,32 @@ export default class ButtonScreen extends Component {
 
   render () {
     return (
-      <View style={styles.container}>
-        <View>
+      <View style={ styles.container }>
           <RadioForm
-            style={{height: 100, width: 100}}
+            style={{height: 100}}
             radio_props={radio_props}
             formHorizontal={true}
             labelHorizontal={false}
             buttonColor={'#2196f3'}
             animation={true}
-            initial={"false"}
+            initial={this.state.sex || 0}
             onPress={(value) => {this.setSex(value)}}
           />
-        </View>
 
-        <Text style={{height: 40 , width: 80}}>
-          Paino: {this.state.weight}
-        </Text>
-
-        <Text style={{height: 40 , width: 80}}>
-          seksi: {this.state.sex}
+        <Text style={{height: 40 , width: 140, textAlign: 'center'}}>
+          Weight: {this.state.weight} kg.
         </Text>
 
         <TextInput
-          style={{height: 40, width: 80}}
+          style={{height: 40, width: 140}}
           keyboardType="numeric"
-          placeholder="paino tähän"
+          placeholder="Weight here"
           onChangeText={(text) => this.setWeight(text)}
           //value={this.state.weight}
         />
 
-        <Button onPress={() => Actions.button()}
+        <Button onPress={() => Actions.pop()}
+          style={styles.button}
           title="doned"
           color="#bbbbbb"
         />
@@ -88,11 +83,14 @@ export default class ButtonScreen extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 2,
+    flex: 1,
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     //backgroundColor: '#00cc66',
+  },
+  button: {
+    border-style: solid
   },
   radioContainer: {
     margin: 10,
@@ -100,7 +98,9 @@ const styles = StyleSheet.create({
   welcome: {
     fontSize: 20,
     textAlign: 'center',
-    margin: 10,
+
     color: '#ffffff',
   },
 });
+
+export default buttonScreen;
